@@ -1,101 +1,140 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [playlistData, setPlaylistData] = useState(null);
+  const [playlistItems, setPlaylistItems] = useState(null);
+  const [error, setError] = useState(null);
+  const [totalVideos, setTotalVideos] = useState(0);
+  const [videoViews, setVideoViews] = useState({});
+  const [totalCombinedViews, setTotalCombinedViews] = useState(0);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false); // For toggling description
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const PLAYLIST_ID = "PLu71SKxNbfoBuX3f4EOACle2y-tRC5Q37";
+  const API_KEY = "AIzaSyBYIrwTIoK0CYfxaoZmERZ7JrNNi8XRCqc";
+
+  const timeAgo = (publishDate) => {
+    return formatDistanceToNow(new Date(publishDate), { addSuffix: false });
+  };
+
+  useEffect(() => {
+    async function fetchPlaylistDetails() {
+      try {
+        // Fetch playlist metadata (title, description, thumbnails)
+        const playlistRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${PLAYLIST_ID}&key=${API_KEY}`
+        );
+        if (!playlistRes.ok) throw new Error("Failed to fetch playlist details");
+        const playlistData = await playlistRes.json();
+        setPlaylistData(playlistData.items[0].snippet);
+
+        // Fetch playlist items (videos)
+        const itemsRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${PLAYLIST_ID}&maxResults=50&key=${API_KEY}`
+        );
+        if (!itemsRes.ok) throw new Error("Failed to fetch playlist items");
+        const itemsData = await itemsRes.json();
+        setPlaylistItems(itemsData.items);
+        setTotalVideos(itemsData.pageInfo.totalResults);
+
+        // Fetch video statistics (views)
+        const videoIds = itemsData.items
+          .map((item) => item.snippet.resourceId.videoId)
+          .join(",");
+        const videoStatsRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds}&key=${API_KEY}`
+        );
+        if (!videoStatsRes.ok) throw new Error("Failed to fetch video statistics");
+        const videoStatsData = await videoStatsRes.json();
+
+        // Map video ID to view counts and calculate total combined views
+        const viewsMap = videoStatsData.items.reduce((map, video) => {
+          map[video.id] = parseInt(video.statistics.viewCount, 10);
+          return map;
+        }, {});
+
+        const totalViews = videoStatsData.items.reduce(
+          (sum, video) => sum + parseInt(video.statistics.viewCount, 10),
+          0
+        );
+
+        setVideoViews(viewsMap);
+        setTotalCombinedViews(totalViews);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError(err.message);
+      }
+    }
+
+    fetchPlaylistDetails();
+  }, []);
+
+  if (error) return <div>Error: {error}</div>;
+  if (!playlistData || !playlistItems) return <div>Loading...</div>;
+
+  // Function to handle toggling of description
+  const toggleDescription = () => {
+    setIsDescriptionExpanded(!isDescriptionExpanded);
+  };
+
+  return (
+    <div className=" flex">
+      {/* Left div (fixed) */}
+      <div className="w-[25%] ml-[2%] text-center mb-8 p-4 bg-gray-300 rounded-lg sticky top-0 h-screen sticky">
+        <div className="relative w-full max-w-md mx-auto aspect-video">
+          <Image
+            src={playlistData.thumbnails.high.url}
+            alt={playlistData.title}
+            fill
+            className="rounded-md object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <h1 className="text-2xl font-bold mt-4 flex justify-start mb-2">{playlistData.title}</h1>
+        <p className="text-gray-700 font-bold text-sm flex justify-start mb-2">{playlistData.channelTitle}</p>
+        <p className="flex justify-start text-sm font-semibold mb-2">
+          Playlist • {totalVideos} videos • {totalCombinedViews.toLocaleString()} views
+        </p>
+
+        {/* Display Playlist Description */}
+        <p className="text-gray-600 text-left">
+          {isDescriptionExpanded
+            ? playlistData.description
+            : playlistData.description.slice(0, 100) + "..."}
+          <button onClick={toggleDescription} className="text-blue-500">
+            {isDescriptionExpanded ? "Read Less" : " More"}
+          </button>
+        </p>
+      </div>
+
+      {/* Right div (scrollable) */}
+      <div className="w-full ml-3 h-screen overflow-y-auto">
+        {playlistItems.map((item) => (
+          <div key={item.id} className="border rounded-lg shadow-md mb-4">
+            <div className="flex items-start">
+              <Image
+                src={item.snippet.thumbnails.medium.url}
+                alt={item.snippet.title}
+                width={160}
+                height={100}
+                className="rounded-md object-cover"
+              />
+              <div className="ml-4">
+                <h3 className="font-semibold text-lg">{item.snippet.title}</h3>
+                <p className="text-gray-600 text-sm">
+                  {playlistData.channelTitle} .{" "}
+                  {videoViews[item.snippet.resourceId.videoId]?.toLocaleString() ||
+                    "N/A"}{" "}
+                  views . {timeAgo(item.snippet.publishedAt)} ago
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
