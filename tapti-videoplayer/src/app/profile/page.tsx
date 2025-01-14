@@ -55,7 +55,6 @@ export default async function SignIn() {
                     
 
                     if (!response.ok) {
-                        const errormessage = data.message
                         throw new Error(`Error: ${response.statusText}`);
                     }
                 } catch (error) {
@@ -106,8 +105,8 @@ export default async function SignIn() {
               "use server";
               await signIn("google")
 
-            const session = await auth(); // Re-fetch session after signing in
-            const user = session?.user;
+            // const session = await auth(); // Re-fetch session after signing in
+            // const user = session?.user;
 
 
             // if ( user) {

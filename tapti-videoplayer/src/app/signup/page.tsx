@@ -1,4 +1,4 @@
-import { auth, signIn } from "@/auth";
+import { signIn } from "@/auth";
 import Link from "next/link";
 
 export default function SignUp() {
@@ -27,11 +27,11 @@ export default function SignUp() {
                           },
                           body: JSON.stringify({ email, password, name }),
                       });
-                      const data = await response.json()
+                    //   const data = await response.json()
                       
   
                       if (!response.ok) {
-                          const errormessage = data.message
+                        //   const errormessage = data.message
                           throw new Error(`Error: ${response.statusText}`);
                       }
                   } catch (error) {
@@ -99,8 +99,8 @@ export default function SignUp() {
               "use server";
               await signIn("google");
 
-            const session = await auth(); // Re-fetch session after signing in
-            const user = session?.user;
+            // const session = await auth(); // Re-fetch session after signing in
+            // const user = session?.user;
 
 
             // if ( user) {
