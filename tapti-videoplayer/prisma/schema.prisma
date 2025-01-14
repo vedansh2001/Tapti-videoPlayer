@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid()) // Unique user ID
+  name      String? // User's name
+  email     String     @unique // User's email (fetched from OAuth)
+  password  String?
+  image     String? // User's profile picture (if available from OAuth)
+  accounts  Account[] // Relationship to accounts for OAuth
+  playlists Playlist[] // Relationship to user's playlists
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Account {
+  id                String   @id @default(cuid()) // Unique account ID
+  userId            String // Foreign key to User model
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String // Provider name (e.g., "google")
+  providerAccountId String // Provider account ID
+  accessToken       String? // OAuth access token
+  refreshToken      String? // OAuth refresh token (if applicable)
+  expiresAt         Int? // Expiration timestamp for access token
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Playlist {
+  id           String   @id @default(cuid()) // Unique playlist ID
+  userId       String // Foreign key to User model
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlistId   String   @unique // YouTube playlist ID
+  title        String // Playlist title
+  description  String? // Playlist description
+  thumbnailUrl String? // Playlist thumbnail URL
+  videos       Video[] // Relationship to videos in the playlist
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Video {
+  id           String    @id @default(cuid()) // Unique video ID
+  playlistId   String // Foreign key to Playlist model
+  playlist     Playlist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  videoId      String    @unique // YouTube video ID
+  title        String // Video title
+  description  String? // Video description
+  thumbnailUrl String? // Video thumbnail URL
+  publishedAt  DateTime? // Video publication date
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}

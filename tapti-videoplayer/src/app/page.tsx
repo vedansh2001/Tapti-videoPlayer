@@ -4,19 +4,42 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 
+type PlaylistData = {
+  title: string;
+  description: string;
+  channelTitle: string;
+  thumbnails: {
+    high: { url: string };
+  };
+};
+
+type PlaylistItem = {
+  id: string;
+  snippet: {
+    title: string;
+    publishedAt: string;
+    thumbnails: {
+      medium: { url: string };
+    };
+    resourceId: {
+      videoId: string;
+    };
+  };
+};
+
 export default function Home() {
-  const [playlistData, setPlaylistData] = useState(null);
-  const [playlistItems, setPlaylistItems] = useState(null);
-  const [error, setError] = useState(null);
+  const [playlistData, setPlaylistData] = useState<PlaylistData | null>(null);
+  const [playlistItems, setPlaylistItems] = useState<PlaylistItem[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [totalVideos, setTotalVideos] = useState(0);
-  const [videoViews, setVideoViews] = useState({});
+  const [videoViews, setVideoViews] = useState<Record<string, number>>({});
   const [totalCombinedViews, setTotalCombinedViews] = useState(0);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false); // For toggling description
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const PLAYLIST_ID = "PLu71SKxNbfoBuX3f4EOACle2y-tRC5Q37";
   const API_KEY = "AIzaSyBYIrwTIoK0CYfxaoZmERZ7JrNNi8XRCqc";
 
-  const timeAgo = (publishDate) => {
+  const timeAgo = (publishDate: string): string => {
     return formatDistanceToNow(new Date(publishDate), { addSuffix: false });
   };
 
@@ -81,9 +104,10 @@ export default function Home() {
   };
 
   return (
-    <div className=" flex">
+    <div className=" flex bg-gray-200">
+
       {/* Left div (fixed) */}
-      <div className="w-[25%] ml-[2%] text-center mb-8 p-4 bg-gray-300 rounded-lg sticky top-0 h-screen sticky">
+      <div className="w-[40%] ml-[2%] text-center mb-8 p-4 bg-gray-300 rounded-lg sticky top-0 h-screen">
         <div className="relative w-full max-w-md mx-auto aspect-video">
           <Image
             src={playlistData.thumbnails.high.url}
@@ -111,9 +135,9 @@ export default function Home() {
       </div>
 
       {/* Right div (scrollable) */}
-      <div className="w-full ml-3 h-screen overflow-y-auto">
+      <div className="w-full ml-3 pt-4 h-screen overflow-y-auto">
         {playlistItems.map((item) => (
-          <div key={item.id} className="border rounded-lg shadow-md mb-4">
+          <div key={item.id} className="border rounded-lg shadow-md mb-4 ">
             <div className="flex items-start">
               <Image
                 src={item.snippet.thumbnails.medium.url}
@@ -123,8 +147,8 @@ export default function Home() {
                 className="rounded-md object-cover"
               />
               <div className="ml-4">
-                <h3 className="font-semibold text-lg">{item.snippet.title}</h3>
-                <p className="text-gray-600 text-sm">
+                <h3 className="font-semibold text-lg mb-2">{item.snippet.title}</h3>
+                <p className="text-gray-700 text-sm font-semibold">
                   {playlistData.channelTitle} .{" "}
                   {videoViews[item.snippet.resourceId.videoId]?.toLocaleString() ||
                     "N/A"}{" "}
