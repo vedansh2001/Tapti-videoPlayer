@@ -1,7 +1,9 @@
-
 const nextConfig = {
   images: {
-    domains: ['i.ytimg.com'],                                    // Allow images from this domain
+    domains: ['i.ytimg.com'],
+  },
+  experimental: {
+    serverActions: true,
   },
 };
 
