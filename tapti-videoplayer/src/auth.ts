@@ -31,7 +31,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user }) {
       try {
         // Save user to the database
-        const response = await fetch("http://localhost:3000/api/user", {
+        const URL = process.env.WEBSITE_URL
+        const response = await fetch("/api/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
