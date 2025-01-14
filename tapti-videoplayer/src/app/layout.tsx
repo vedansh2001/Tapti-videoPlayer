@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 
+// Specify the weights you want to use
 const roboto = Roboto({
   variable: "--font-roboto",
   subsets: ["latin"],
+  weight: ["400", "700"], // Specify the weights here
 });
 
 const robotoMono = Roboto_Mono({
   variable: "--font-roboto-mono",
   subsets: ["latin"],
+  weight: ["400", "700"], // Specify the weights here
 });
 
 export const metadata: Metadata = {
