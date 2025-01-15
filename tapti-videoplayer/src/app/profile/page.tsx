@@ -1,70 +1,54 @@
-import { signIn, auth, signOut } from "@/auth";
+"use client";
+
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 
-export default async function SignIn() {
+export default function SignIn() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const session = await auth();
-  const user = session?.user;
-//   const [password, setPassword] = useState("");
-//   const [email, setEmail] = useState("");
+  const handleSignIn = async (formData: FormData) => {
+    setLoading(true);
+    setError("");
 
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-  return user ? (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg text-center">
-        <h1 className="text-3xl font-bold mb-4">Welcome, {user.name}!</h1>
-        <p className="text-gray-600 mb-6">You are signed in as {user.email}.</p>
-        <form
-          action={async () => {
-            "use server";
-            await signOut();
-          }}
-        >
-          <button className="px-6 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition">
-            Sign Out
-          </button>
-        </form>
-      </div>
-    </div>
-  ) : (
+    try {
+      const response = await fetch("/api/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to sign in.");
+      }
+
+      // Successful sign-in, redirect the user
+      window.location.href = process.env.NEXT_PUBLIC_WEBSITE_URL || "/";
+
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
     <div className="flex items-center justify-center h-screen bg-gray-300">
       <div className="bg-white p-10 rounded-lg shadow-lg w-96">
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Sign In</h1>
         <form
-          action={async (formData) => {
-            "use server";
-            const email = formData.get("email") as string;
-            const password = formData.get("password") as string;
-
-            if ( email && password) {
-              // Implement custom sign-in logic here
-              console.log({ email, password });
-            //   await signIn("credentials", { email, password });
-              
-
-                try {
-                  const NEXT_PUBLIC_WEBSITE_URL = process.env.NEXT_PUBLIC_WEBSITE_URL;
-                  
-                    const response = await fetch(`${NEXT_PUBLIC_WEBSITE_URL}/api/user`, {
-                        method: "POST",
-                        headers: {
-                        "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ email, password }),
-                    });
-                    const data = await response.json()
-                    console.log("bhai dekho data aagya hai balle balle: --------------------------------------", data);
-                    
-
-                    if (!response.ok) {
-                        throw new Error(`Error: ${response.statusText}`);
-                    }
-                } catch (error) {
-                    console.error("Error during Login:", error);
-                } 
-
-            }
-
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            await handleSignIn(formData);
           }}
           className="flex flex-col gap-4"
         >
@@ -96,73 +80,56 @@ export default async function SignIn() {
           </div>
           <button
             type="submit"
-            className="w-[30%] ml-[35%] py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition"
+            disabled={loading}
+            className={`w-full py-2 text-white font-semibold rounded-lg shadow transition ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+            }`}
           >
-            Sign In
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <svg
+                  className="animate-spin h-5 w-5 text-white mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+                <span className="text-sm">Loading...</span>
+              </div>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
+        {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
+
         <div className="mt-6 text-center">
-          <form
-            action={async () => {
-              "use server";
-              await signIn("google")
-
-            // const session = await auth(); // Re-fetch session after signing in
-            // const user = session?.user;
-
-
-            // if ( user) {
-            //   const email = user.email;
-            //   const name = user.name; 
-              
-
-            //     try {
-            //         const response = await fetch("http://localhost:3000/api/user", {
-            //             method: "POST",
-            //             headers: {
-            //             "Content-Type": "application/json",
-            //             },
-            //             body: JSON.stringify({ email, name }),
-            //         });
-            //         const data = await response.json()
-            //         console.log("bhai dekho data aagya hai balle balle: --------------------------------------", user);
-                    
-
-            //         if (!response.ok) {
-            //             const errormessage = data.message
-            //             throw new Error(`Error: ${response.statusText}`);
-            //         }
-            //     } catch (error) {
-            //         console.error("Error during Login:", error);
-            //     } 
-
-            // }
-
-
-
-
-
-            }}
-            className="mt-4"
+          <button
+            onClick={() => signIn("google")}
+            className="w-full py-2 bg-green-500 text-white font-semibold rounded-lg shadow hover:bg-green-600 transition"
           >
-            <button
-              type="submit"
-              className="w-full py-2 bg-green-500 text-white font-semibold rounded-lg shadow hover:bg-green-600 transition"
-            //   onClick={() => {
-            //     try {
-                    
-            //     } catch (error) {
-                    
-            //     }
-            //   }}
-            >
-              Sign in with Google
-            </button>
-          </form>
+            Sign in with Google
+          </button>
         </div>
-        <div className="pt-4 text-xs flex justify-center font-semibold" >Create account? 
-                                <Link href="/signup" className="text-blue-600 font-semibold ml-1">Sign Up
-                                </Link>
+
+        <div className="pt-4 text-xs flex justify-center font-semibold">
+          Create an account?{" "}
+          <Link href="/signup" className="text-blue-600 font-semibold ml-1">
+            Sign Up
+          </Link>
         </div>
       </div>
     </div>
