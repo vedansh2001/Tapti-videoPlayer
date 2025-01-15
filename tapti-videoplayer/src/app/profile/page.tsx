@@ -33,8 +33,13 @@ export default function SignIn() {
       // Successful sign-in, redirect the user
       window.location.href = process.env.NEXT_PUBLIC_WEBSITE_URL || "/";
 
-    } catch (error) {
-      setError(error.message);
+    } catch (err: unknown) {
+      // Type assertion to `Error`
+      if (err instanceof Error) {
+        setError(err.message); 
+      } else {
+        setError("An unknown error occurred.");
+      }
     } finally {
       setLoading(false);
     }

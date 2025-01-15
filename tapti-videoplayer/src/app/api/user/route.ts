@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       data: {
         name: body.name,
         email: body.email,
-        password: body.password || "", // You should hash the password in real-world use
+        password: body.password || "",
       },
     });
 

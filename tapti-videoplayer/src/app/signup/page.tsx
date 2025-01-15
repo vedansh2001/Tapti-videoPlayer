@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "@/auth";
+// import { signIn } from "@/auth";
 import Link from "next/link";
 
 export default function SignUp() {
@@ -36,8 +36,12 @@ export default function SignUp() {
       // After successful signup, redirect to the website URL
       window.location.href = NEXT_PUBLIC_WEBSITE_URL || "/";
 
-    } catch (error: any) {
-      setError(error.message || "An error occurred");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message); 
+      } else {
+        setError("An unknown error occurred.");
+      }
     } finally {
       setLoading(false);
     }
