@@ -43,9 +43,11 @@ export default function Home() {
   const [totalCombinedViews, setTotalCombinedViews] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  const PLAYLIST_ID = "PLu71SKxNbfoBuX3f4EOACle2y-tRC5Q37";
-  const API_KEY = "AIzaSyBYIrwTIoK0CYfxaoZmERZ7JrNNi8XRCqc";
+  const PLAYLIST_ID = process.env.NEXT_PUBLIC_PLAYLIST_ID;
+  const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
+  console.log("this is PLAYLIST_ID:", PLAYLIST_ID);
+  
   const timeAgo = (publishDate: string): string => {
     return formatDistanceToNow(new Date(publishDate), { addSuffix: false });
   };
@@ -108,7 +110,7 @@ export default function Home() {
     }
 
     fetchPlaylistDetails();
-  }, []);
+  }, [PLAYLIST_ID, API_KEY]);
 
   if (error) return <div>Error: {error}</div>;
   if (!playlistData || !playlistItems) return <div>Loading...</div>;
