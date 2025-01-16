@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
+import FabarComponent from "./components/FabarComponent/FabarComponent";
+import { getSession } from "next-auth/react";
 
 type PlaylistData = {
   title: string;
@@ -42,6 +44,8 @@ export default function Home() {
   const [videoViews, setVideoViews] = useState<Record<string, number>>({});
   const [totalCombinedViews, setTotalCombinedViews] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [barisopen, setBarisopen] = useState(false)
+  const [isLoggedIn, setIsloggedIn] = useState(false);
 
   const PLAYLIST_ID = process.env.NEXT_PUBLIC_PLAYLIST_ID;
   const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
@@ -51,6 +55,18 @@ export default function Home() {
   const timeAgo = (publishDate: string): string => {
     return formatDistanceToNow(new Date(publishDate), { addSuffix: false });
   };
+
+
+  useEffect(() => {
+    async function checkUserSession() {
+      const session = await getSession();
+      setIsloggedIn(!!session);
+    }
+
+    checkUserSession();
+  }, []);
+
+
 
   useEffect(() => {
     async function fetchPlaylistDetails() {
@@ -121,9 +137,13 @@ export default function Home() {
   };
 
   return (
-    <div className=" flex bg-gray-200">
+    <div className=" bg-gray-200">
+    <FabarComponent barisopen={barisopen} setBarisopen={setBarisopen} isLoggedIn={isLoggedIn} />
+    <div className=" flex">
+
+
       {/* Left div (fixed) */}
-      <div className="w-[40%] ml-[2%] text-center mb-8 p-4 bg-gray-300 rounded-lg sticky top-0 h-screen">
+      <div className="w-[40%] text-center mb-8 p-4 bg-gray-300 rounded-md sticky top-0 h-screen">
         <div className="relative w-full max-w-md mx-auto aspect-video">
           <Image
             src={playlistData.thumbnails.high.url}
@@ -155,7 +175,7 @@ export default function Home() {
       </div>
 
       {/* Right div (scrollable) */}
-      <div className="w-full ml-3 pt-4 h-screen overflow-y-auto">
+      <div className="w-full ml-1 p-4 h-screen overflow-y-auto bg-gray-300 rounded-md">
         {playlistItems.map((item: PlaylistItem) => (
           <div key={item.id} className="border rounded-lg shadow-md mb-4 ">
             <div className="flex items-start">
@@ -179,6 +199,7 @@ export default function Home() {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 }

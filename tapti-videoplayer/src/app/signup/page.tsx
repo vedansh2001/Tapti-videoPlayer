@@ -3,6 +3,7 @@
 import { useState } from "react";
 // import { signIn } from "@/auth";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 export default function SignUp() {
   const [loading, setLoading] = useState(false);
@@ -136,6 +137,15 @@ export default function SignUp() {
         </form>
 
         {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
+        
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => signIn("google")}
+                    className="w-full py-2 bg-green-500 text-white font-semibold rounded-lg shadow hover:bg-green-600 transition"
+                  >
+                    Sign in with Google
+                  </button>
+                </div>
 
         <div className="mt-6 text-center">
           <div className="pt-4 text-xs flex justify-center font-semibold">
